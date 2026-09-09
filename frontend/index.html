@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSL-AeroDefect Pro | AI Surface Defect & Root-Cause Intelligence Platform</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for high-speed spectral & defect charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- Top Navigation & SCADA Telemetry Bar -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <div class="brand-logo-wrap">
+        <span class="brand-spark">⚡</span>
+        <div class="brand-titles">
+          <div class="brand-main">JINDAL STAINLESS <span class="badge-sub">SPARK</span></div>
+          <div class="brand-sub">JSL-AeroDefect Pro &bull; Mill Quality Intelligence</div>
+        </div>
+      </div>
+      <div class="system-status-chip">
+        <span class="status-dot pulse"></span>
+        <span class="status-text">CRM-LINE 04 ACTIVE</span>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Badges -->
+    <div class="nav-telemetry">
+      <div class="telemetry-item">
+        <span class="telem-label">INFERENCE SPEED</span>
+        <span class="telem-val text-cyan" id="telem-latency">18.4 ms</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telem-label">VISION FRAME RATE</span>
+        <span class="telem-val text-emerald" id="telem-fps">54.3 FPS</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telem-label">LINE SPEED</span>
+        <div class="speed-control-wrap">
+          <span class="telem-val text-amber" id="telem-speed">8.5 m/s</span>
+          <input type="range" id="line-speed-slider" min="2.0" max="15.0" step="0.5" value="8.5" title="Simulated Mill Strip Speed">
+        </div>
+      </div>
+      <div class="telemetry-item grade-selector-item">
+        <span class="telem-label">STEEL GRADE TOLERANCE</span>
+        <select id="grade-select" class="grade-dropdown">
+          <option value="304" selected>SS 304 (Architecture / Food)</option>
+          <option value="316L">SS 316L (Pharma / Marine - Zero Tol)</option>
+          <option value="430">SS 430 (Automotive / Ferritic)</option>
+          <option value="201">SS 201 (Utensil / Formable)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-tab="tab-inspect" id="btn-tab-inspect">
+          <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          <div class="btn-text">
+            <span class="btn-title">Live Inspection</span>
+            <span class="btn-desc">Real-time defect vision & DSI</span>
+          </div>
+        </button>
+        <button class="nav-btn" data-tab="tab-periodicity" id="btn-tab-periodicity">
+          <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          <div class="btn-text">
+            <span class="btn-title">Roll-Mark Root Cause</span>
+            <span class="btn-desc">FFT roll stand diagnosis</span>
+          </div>
+        </button>
+        <button class="nav-btn" data-tab="tab-coil-twin" id="btn-tab-twin">
+          <svg viewBox="0 0 24 24" class="nav-icon"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h1.5v3l2-3h1.7l-2.5 3.7L17 12h-1.8l-1.7-2.5V12H12V5zM7 7h2v2H7V7zm0 4h2v2H7v-2zm10 6H7v-2h10v2z"/></svg>
+          <div class="btn-text">
+            <span class="btn-title">Coil Digital Twin</span>
+            <span class="btn-desc">2D strip map & smart slitting</span>
+          </div>
+        </button>
+        <button class="nav-btn" data-tab="tab-certificate" id="btn-tab-cert">
+          <svg viewBox="0 0 24 24" class="nav-icon"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          <div class="btn-text">
+            <span class="btn-title">ASTM Certificate</span>
+            <span class="btn-desc">Mill QA dispatch report</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- Grade Info Card -->
+      <div class="sidebar-info-card">
+        <div class="info-card-header">
+          <span class="info-icon">📋</span>
+          <span class="info-title" id="info-grade-name">SS 304 (Standard)</span>
+        </div>
+        <p class="info-desc" id="info-grade-desc">
+          18/8 Chrome-Nickel. Strict limits on scratches and roll marks for food & architectural specs.
+        </p>
+        <div class="info-meta">
+          <div><span>Max DSI:</span> <strong id="info-max-dsi">40.0</strong></div>
+          <div><span>Finish:</span> <strong id="info-finish">2B / BA</strong></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- ================= TAB 1: LIVE INSPECTION ================= -->
+      <section id="tab-inspect" class="tab-pane active">
+        <!-- Control Bar -->
+        <div class="inspect-toolbar">
+          <div class="preset-buttons-group">
+            <span class="toolbar-label">TEST SAMPLES:</span>
+            <button class="preset-btn" data-sample="sample_sc.jpg">Scratch (SC)</button>
+            <button class="preset-btn" data-sample="sample_rm.jpg">Roll Mark (RM)</button>
+            <button class="preset-btn" data-sample="sample_rs.jpg">Rolled-in Scale (RS)</button>
+            <button class="preset-btn" data-sample="sample_ec.jpg">Edge Crack (EC)</button>
+            <button class="preset-btn" data-sample="sample_in.jpg">Inclusion (IN)</button>
+            <button class="preset-btn" data-sample="sample_ps.jpg">Pitting (PS)</button>
+            <button class="preset-btn" data-sample="sample_pa.jpg">Patch (PA)</button>
+            <button class="preset-btn" data-sample="sample_cr.jpg">Crazing (CR)</button>
+            <button class="preset-btn clean-btn" data-sample="clean_prime_steel.jpg">Clean Prime</button>
+          </div>
+
+          <div class="toolbar-actions">
+            <label class="btn-upload" title="Upload Steel Strip Image">
+              <input type="file" id="file-upload-input" accept="image/*" style="display:none;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              Upload Custom Image
+            </label>
+            <button id="btn-toggle-cam-sim" class="btn-cam-sim">
+              <span class="sim-pulse-dot"></span>
+              <span id="sim-btn-label">Start High-Speed Cam Sim</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Inspection Grid -->
+        <div class="inspect-grid">
+          <!-- Left: Visual Inspection Display -->
+          <div class="card canvas-card">
+            <div class="card-header">
+              <div class="header-left">
+                <span class="card-title">OPTICAL STRIP INSPECTION CANVAS</span>
+                <span class="feed-tag" id="feed-status-tag">ACTIVE SAMPLE: sample_sc.jpg</span>
+              </div>
+              <div class="header-right">
+                <span class="canvas-zoom-pill">100% SCALE</span>
+              </div>
+            </div>
+            
+            <div class="canvas-viewport">
+              <img id="annotated-preview-img" src="/sample_defects/sample_sc.jpg" alt="Steel Strip Image" />
+              <div id="canvas-overlay" class="overlay-container"></div>
+              <div id="cam-scanline" class="scanline-bar hidden"></div>
+            </div>
+
+            <!-- Bottom Telemetry Bar with Defect Type & Confidence Score -->
+            <div class="canvas-bottom-bar">
+              <div class="stat-group">
+                <span class="stat-lbl">PRIMARY DEFECT TYPE:</span>
+                <span class="stat-num text-orange" id="stat-primary-type">--</span>
+              </div>
+              <div class="stat-group">
+                <span class="stat-lbl">CONFIDENCE SCORE:</span>
+                <span class="stat-num text-emerald" id="stat-primary-conf">--</span>
+              </div>
+              <div class="stat-group">
+                <span class="stat-lbl">DEFECTS FOUND:</span>
+                <span class="stat-num text-cyan" id="stat-defect-count">--</span>
+              </div>
+              <div class="stat-group">
+                <span class="stat-lbl">MAX SEVERITY (DSI):</span>
+                <span class="stat-num" id="stat-max-dsi">--</span>
+              </div>
+              <div class="stat-group">
+                <span class="stat-lbl">PROCESSING TIME:</span>
+                <span class="stat-num text-emerald" id="stat-latency">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Intelligent Telemetry & Defect Analytics Panel -->
+          <div class="card analytics-card">
+            <!-- Grade Disposition Verdict Card -->
+            <div class="disposition-box" id="disposition-container">
+              <div class="disp-header">
+                <span class="disp-title">AUTOMATED COIL DISPOSITION</span>
+                <span class="disp-badge" id="disp-badge">EVALUATING</span>
+              </div>
+              <div class="disp-summary" id="disp-summary">
+                Analyzing strip against Grade tolerance criteria...
+              </div>
+              <div id="disp-violations" class="violations-list"></div>
+            </div>
+
+            <!-- Detected Defects List -->
+            <div class="card-section">
+              <div class="section-title">DEFECT CATALOG & SEVERITY BREAKDOWN</div>
+              <div id="defects-scroll-list" class="defects-list">
+                <div class="empty-state">No defects detected in current frame. Strip surface conforms to Prime specification.</div>
+              </div>
+            </div>
+
+            <!-- Root-Cause Alert Teaser -->
+            <div id="periodicity-teaser" class="periodicity-banner hidden">
+              <div class="banner-icon">⚠️</div>
+              <div class="banner-content">
+                <div class="banner-title">PERIODIC ROLL MARK DETECTED</div>
+                <div class="banner-sub" id="teaser-sub">Recurring defect pattern detected along strip. Open Roll-Mark Tab for stand diagnosis.</div>
+              </div>
+              <button class="banner-action-btn" id="btn-jump-periodicity">Diagnose Stand &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: ROLL-MARK ROOT CAUSE (FFT) ================= -->
+      <section id="tab-periodicity" class="tab-pane">
+        <div class="periodicity-container">
+          <!-- Top Diagnosis Hero Banner -->
+          <div class="card diagnosis-hero">
+            <div class="hero-left">
+              <div class="hero-badge" id="hero-urgency-badge">STAND FAULT LOCALIZED</div>
+              <h2 class="hero-title" id="hero-stand-name">Stand F3 (Intermediate 2) Work Roll Damage</h2>
+              <p class="hero-desc" id="hero-action-text">
+                Dominant spatial period of <strong>1072.5 mm</strong> corresponds precisely to a work roll diameter of <strong>339.8 mm</strong> with 3.5% forward slip.
+                Recommended Action: <em>Immediate inter-stand inspection. Verify roll coolant nozzles are unclogged to avoid thermal fatigue spalling.</em>
+              </p>
+            </div>
+            <div class="hero-metrics">
+              <div class="metric-card">
+                <span class="metric-title">SPATIAL PERIOD (&lambda;)</span>
+                <span class="metric-val text-amber" id="hero-period">1072.5 mm</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">ESTIMATED ROLL DIA (D)</span>
+                <span class="metric-val text-cyan" id="hero-diameter">339.8 mm</span>
+              </div>
+              <div class="metric-card">
+                <span class="metric-title">FFT MATCH CONFIDENCE</span>
+                <span class="metric-val text-emerald" id="hero-conf">94.8%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: FFT Chart & Mill Roll Registry -->
+          <div class="periodicity-grid">
+            <div class="card chart-card">
+              <div class="card-header">
+                <span class="card-title">1D SPATIAL FOURIER POWER SPECTRUM (FFT)</span>
+                <span class="chart-subtitle">Detecting Repeating Mechanical Wavelengths</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="fftChart"></canvas>
+              </div>
+            </div>
+
+            <div class="card rolls-card">
+              <div class="card-header">
+                <span class="card-title">JSL TANDEM MILL ROLL GEOMETRY REGISTRY</span>
+                <span class="chart-subtitle">Roll Diameters vs Spatial Frequency</span>
+              </div>
+              <div class="roll-stands-list">
+                <div class="stand-item" data-stand="F1">
+                  <div class="stand-info">
+                    <strong>Stand F1 (Roughing Pass)</strong>
+                    <span>Work Roll &bull; Dia: 420mm &bull; Period: 1319.5mm</span>
+                  </div>
+                  <span class="stand-pill safe">Normal</span>
+                </div>
+                <div class="stand-item" data-stand="F2">
+                  <div class="stand-info">
+                    <strong>Stand F2 (Intermediate 1)</strong>
+                    <span>HSS Roll &bull; Dia: 380mm &bull; Period: 1193.8mm</span>
+                  </div>
+                  <span class="stand-pill safe">Normal</span>
+                </div>
+                <div class="stand-item fault" data-stand="F3">
+                  <div class="stand-info">
+                    <strong>Stand F3 (Intermediate 2)</strong>
+                    <span>Forged Steel &bull; Dia: 340mm &bull; Period: 1068.1mm</span>
+                  </div>
+                  <span class="stand-pill danger">FAULT DETECTED</span>
+                </div>
+                <div class="stand-item" data-stand="F4">
+                  <div class="stand-info">
+                    <strong>Stand F4 (Finishing)</strong>
+                    <span>Tungsten Carbide &bull; Dia: 300mm &bull; Period: 942.5mm</span>
+                  </div>
+                  <span class="stand-pill safe">Normal</span>
+                </div>
+                <div class="stand-item" data-stand="F5">
+                  <div class="stand-info">
+                    <strong>Stand F5 / Skin Pass Mill</strong>
+                    <span>Textured Mirror Roll &bull; Dia: 280mm &bull; Period: 879.6mm</span>
+                  </div>
+                  <span class="stand-pill safe">Normal</span>
+                </div>
+                <div class="stand-item" data-stand="Bridle">
+                  <div class="stand-info">
+                    <strong>Tension Bridle Roll #2</strong>
+                    <span>Polyurethane Bridle &bull; Dia: 250mm &bull; Period: 785.4mm</span>
+                  </div>
+                  <span class="stand-pill safe">Normal</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: COIL DIGITAL TWIN & SLITTING ================= -->
+      <section id="tab-coil-twin" class="tab-pane">
+        <div class="twin-container">
+          <!-- ROI & Economic Header -->
+          <div class="card roi-banner">
+            <div class="roi-item">
+              <span class="roi-label">SALVAGED PRIME YIELD</span>
+              <span class="roi-val text-emerald" id="twin-prime-yield">89.1%</span>
+              <span class="roi-sub">21.4 MT of 24.0 MT Salvaged</span>
+            </div>
+            <div class="roi-divider"></div>
+            <div class="roi-item">
+              <span class="roi-label">NET FINANCIAL RECOVERY</span>
+              <span class="roi-val text-orange" id="twin-savings-lakhs">₹ 18.88 Lakhs</span>
+              <span class="roi-sub">Downgrade Loss Avoided on this Coil</span>
+            </div>
+            <div class="roi-divider"></div>
+            <div class="roi-item">
+              <span class="roi-label">ANNUALIZED SAVINGS POTENTIAL</span>
+              <span class="roi-val text-cyan" id="twin-annual-crores">₹ 47.2 Crores</span>
+              <span class="roi-sub">Based on 2,500 Coils/Year CRM Throughput</span>
+            </div>
+            <div class="roi-divider"></div>
+            <div class="roi-action">
+              <button id="btn-re-simulate-coil" class="btn-resim">Re-simulate Coil Run</button>
+            </div>
+          </div>
+
+          <!-- 2D Strip Map Canvas Visualizer -->
+          <div class="card strip-map-card">
+            <div class="card-header">
+              <div>
+                <span class="card-title">FULL COIL 2D STRIP DEFECT MAP (1,500 METERS &times; 1,250 MM)</span>
+                <span class="chart-subtitle">Spatial Defect Clustering & Smart Slitting Cut-Lines</span>
+              </div>
+              <div class="strip-legend">
+                <span class="legend-dot" style="background:#ef4444;"></span> Severe Flaw
+                <span class="legend-dot" style="background:#f59e0b; margin-left:12px;"></span> Moderate Flaw
+                <span class="legend-dot" style="background:#38bdf8; margin-left:12px;"></span> Slitting Line
+              </div>
+            </div>
+
+            <!-- 2D Canvas Representation -->
+            <div class="strip-canvas-wrapper">
+              <div class="lane-labels">
+                <span>DRIVE SIDE (0-300mm)</span>
+                <span>CENTER STRIP (300-950mm)</span>
+                <span>WORK SIDE (950-1250mm)</span>
+              </div>
+              <div class="strip-canvas-box">
+                <canvas id="stripMapCanvas" width="1200" height="260"></canvas>
+                <!-- Cut line indicator labels -->
+                <div class="cut-indicator head-cut">✂ Head Crop: 42m</div>
+                <div class="cut-indicator tail-cut">✂ Tail Crop: 18m</div>
+                <div class="cut-indicator drive-slit">✂ Drive Side Slit: 65mm</div>
+              </div>
+              <div class="strip-ruler">
+                <span>0m</span>
+                <span>300m</span>
+                <span>600m</span>
+                <span>900m</span>
+                <span>1200m</span>
+                <span>1500m</span>
+              </div>
+            </div>
+
+            <!-- Smart Slitting Recommendation Box -->
+            <div class="slitting-prescription">
+              <div class="presc-title">SMART SLITTING PRESCRIPTION</div>
+              <p id="presc-text">
+                Shear head 0-42m (threading scale) + Slit 65mm along Drive Side edge (edge cracking cluster) &rarr;
+                Salvages <strong>1,120 mm Prime Master Strip</strong> (89.1% prime yield recovery).
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: ASTM QUALITY CERTIFICATE ================= -->
+      <section id="tab-certificate" class="tab-pane">
+        <div class="certificate-container">
+          <div class="cert-controls">
+            <button class="btn-cert-print" onclick="window.print()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+              Print / Save Official PDF
+            </button>
+          </div>
+
+          <!-- Printable Certificate Document -->
+          <div class="certificate-sheet" id="certificate-print-area">
+            <div class="cert-header">
+              <div class="cert-logo-section">
+                <h1 class="cert-brand">JINDAL STAINLESS LIMITED</h1>
+                <p class="cert-sub">JAJPUR STAINLESS STEEL COMPLEX &bull; QUALITY ASSURANCE DIVISION</p>
+                <p class="cert-standards">Compliant with ASTM A240 / A480 &bull; EN 10088-2 &bull; ISO 9001:2015</p>
+              </div>
+              <div class="cert-number-box">
+                <span class="cert-lbl">CERTIFICATE NO:</span>
+                <strong id="cert-doc-no">JSL-CERT-894210</strong>
+                <span class="cert-lbl" style="margin-top:6px;">ISSUE DATE:</span>
+                <strong id="cert-doc-date">2026-09-09</strong>
+              </div>
+            </div>
+
+            <div class="cert-divider"></div>
+
+            <div class="cert-meta-grid">
+              <div class="meta-block">
+                <span>COIL IDENTIFICATION:</span>
+                <strong id="cert-coil-id">JSL-CR-2026-9842</strong>
+              </div>
+              <div class="meta-block">
+                <span>HEAT NUMBER:</span>
+                <strong id="cert-heat-no">HT-304-8921</strong>
+              </div>
+              <div class="meta-block">
+                <span>STEEL ALLOY GRADE:</span>
+                <strong id="cert-grade">Austenitic 304 (UNS S30400)</strong>
+              </div>
+              <div class="meta-block">
+                <span>SURFACE FINISH:</span>
+                <strong id="cert-finish">Bright Annealed (BA) / 2B</strong>
+              </div>
+              <div class="meta-block">
+                <span>LINE / OPERATOR:</span>
+                <strong id="cert-line-op">CRM-LINE 04 / QC-INSP-408</strong>
+              </div>
+              <div class="meta-block">
+                <span>COIL LENGTH & WIDTH:</span>
+                <strong id="cert-dimensions">1,500 m &times; 1,250 mm (1.50 mm thk)</strong>
+              </div>
+            </div>
+
+            <div class="cert-section-title">OPTICAL SURFACE INSPECTION SUMMARY</div>
+            <table class="cert-table">
+              <thead>
+                <tr>
+                  <th>Inspection Parameter</th>
+                  <th>Observed Value</th>
+                  <th>Standard Limit (ASTM A240)</th>
+                  <th>Compliance Verdict</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Total Defect Density</td>
+                  <td id="cert-val-density">0.032 defects / m&sup2;</td>
+                  <td>&lt; 0.050 defects / m&sup2;</td>
+                  <td><span class="cert-status-pass">PASS</span></td>
+                </tr>
+                <tr>
+                  <td>Critical Inclusions / Pitting</td>
+                  <td id="cert-val-inclusions">0 Critical Defects</td>
+                  <td>0 Allowable</td>
+                  <td><span class="cert-status-pass">PASS</span></td>
+                </tr>
+                <tr>
+                  <td>Maximum Defect Severity (DSI)</td>
+                  <td id="cert-val-dsi">38.5</td>
+                  <td>&le; 40.0 for Grade 304</td>
+                  <td><span class="cert-status-pass">PASS</span></td>
+                </tr>
+                <tr>
+                  <td>Edge Integrity & Slitting</td>
+                  <td id="cert-val-edge">Edge Trimmed 65mm (Trim Zone)</td>
+                  <td>No active edge cracks on prime body</td>
+                  <td><span class="cert-status-pass">CONFORMS</span></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="cert-disposition-box">
+              <div class="cert-disp-title">FINAL COIL DISPOSITION & DISPATCH RATING:</div>
+              <div class="cert-disp-value" id="cert-final-verdict">PRIME QUALITY (CLASS A) &bull; APPROVED FOR DISPATCH</div>
+              <p class="cert-disp-notes" id="cert-final-notes">
+                Strip surface meets all optical and mechanical surface criteria specified under ASTM A240/A480.
+                Coil is certified for critical architecture, food dairy processing equipment, and export customers.
+              </p>
+            </div>
+
+            <div class="cert-signatures">
+              <div class="sig-block">
+                <div class="sig-line">AI Optical System Verification</div>
+                <span>JSL-AeroDefect Automated QA Engine</span>
+              </div>
+              <div class="sig-block">
+                <div class="sig-line">Chief Metallurgical Officer</div>
+                <span>Jindal Stainless Quality Control</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
