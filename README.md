@@ -194,4 +194,5 @@ http://127.0.0.1:8000/
 ---
 
 ## 👤 Author
-Developed by **Vishu Khajuria** ([@roginferno17](https://github.com/roginferno17)) for the **Jindal Stainless (JSL) Stainless SPARK Innovation Challenge**.
+Developed by **Manish Kumar Rathore** ([@Manishrathore07](https://github.com/Manishrathore07)) for the **Jindal Stainless (JSL) Stainless SPARK Innovation Challenge**.
+
