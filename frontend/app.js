@@ -4,6 +4,15 @@
  * 2D Coil Digital Twin canvas rendering, and ASTM Certificate generation.
  */
 
+// Dynamic API base URL: If opened via VS Code Live Server (port 5500/5501) or file://, target backend on port 8000
+const API_BASE = (window.location.port === '5500' || window.location.port === '5501' || window.location.protocol === 'file:')
+  ? 'http://127.0.0.1:8000'
+  : '';
+
+function getApiUrl(path) {
+  return `${API_BASE}${path}`;
+}
+
 // Application State
 const state = {
   currentTab: 'tab-inspect',
@@ -329,7 +338,7 @@ async function inspectSample(sampleFilename) {
   formData.append('confidence_threshold', 0.30);
 
   try {
-    const resp = await fetch('/api/inspect', {
+    const resp = await fetch(getApiUrl('/api/inspect'), {
       method: 'POST',
       body: formData
     });
@@ -350,7 +359,7 @@ async function uploadAndInspect(file) {
   formData.append('confidence_threshold', 0.30);
 
   try {
-    const resp = await fetch('/api/inspect', {
+    const resp = await fetch(getApiUrl('/api/inspect'), {
       method: 'POST',
       body: formData
     });
@@ -362,6 +371,7 @@ async function uploadAndInspect(file) {
     el.feedStatusTag.textContent = `ERROR: ${err.message}`;
   }
 }
+
 
 function renderInspectionResults(data, sourceName) {
   state.latestInspection = data;
@@ -633,7 +643,7 @@ function renderFFTChart(spectrumData, peakWavelength) {
 // ================= Tab 3: Coil Digital Twin Canvas =================
 async function loadCoilSimulation() {
   try {
-    const resp = await fetch('/api/coil/simulate', {
+    const resp = await fetch(getApiUrl('/api/coil/simulate'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
