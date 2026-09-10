@@ -188,9 +188,23 @@ el.lineSpeedSlider.addEventListener('input', (e) => {
 });
 
 // ================= Preset & File Upload & Webcam Inspection =================
+function stopSimulationIfRunning() {
+  if (state.isCamSimRunning) {
+    state.isCamSimRunning = false;
+    el.btnToggleCamSim.classList.remove('running');
+    el.simBtnLabel.textContent = 'Start High-Speed Cam Sim';
+    el.camScanline.classList.add('hidden');
+    if (state.camSimTimer) {
+      clearInterval(state.camSimTimer);
+      state.camSimTimer = null;
+    }
+  }
+}
+
 el.presetButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     stopWebcam();
+    stopSimulationIfRunning();
     el.presetButtons.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const sample = btn.dataset.sample;
@@ -202,10 +216,15 @@ el.presetButtons.forEach(btn => {
 el.fileUploadInput.addEventListener('change', (e) => {
   if (e.target.files && e.target.files[0]) {
     stopWebcam();
+    stopSimulationIfRunning();
+    el.presetButtons.forEach(b => b.classList.remove('active'));
     const file = e.target.files[0];
     uploadAndInspect(file);
+    // Reset file input so user can re-upload the same file if desired
+    e.target.value = '';
   }
 });
+
 
 // Webcam Controls
 if (el.btnToggleWebcam) {
@@ -350,7 +369,15 @@ function renderInspectionResults(data, sourceName) {
   const disp = data.disposition;
 
   // Update Visual Canvas
-  el.annotatedPreviewImg.src = data.annotated_image_b64;
+  if (el.webcamVideo) el.webcamVideo.classList.add('hidden');
+  if (el.annotatedPreviewImg) {
+    el.annotatedPreviewImg.classList.remove('hidden');
+    el.annotatedPreviewImg.style.display = 'block';
+    el.annotatedPreviewImg.src = data.annotated_image_b64;
+  }
+  if (!state.isCamSimRunning && el.camScanline) {
+    el.camScanline.classList.add('hidden');
+  }
   el.feedStatusTag.textContent = `ACTIVE: ${sourceName} (${results.defect_count} defects)`;
 
   // Update Primary Defect Type and Peak Confidence Score
